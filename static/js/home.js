@@ -2,13 +2,12 @@ var music = {playing:false, reverb:false};
 
 var context;
 var reverberator;
-var sampleRate = 44100;
 var buffers;
 var audio;
 var info;
 
 function setupContext() {
-	context = new AudioContext(2, sampleRate*10, sampleRate);
+	context = new AudioContext();
 	reverberator = new Reverb(context);
 }
 
@@ -85,4 +84,21 @@ function createsource(buffer, loop) {
 	source.buffer = buffer;
 	source.loop = loop;
 	return source;
+}
+
+function post(e) {
+	console.log(info);
+	info.append('blob', e.data);
+	xhr('/upload', info, function() {console.log('done')});
+	
+	function xhr(url, data, callback) {
+		var request = new XMLHttpRequest();
+		request.onreadystatechange = function() {
+			if (request.readyState == 4 && request.status == 200) {
+				callback();
+			}
+		};
+		request.open('POST', url);
+		request.send(data);
+	}
 }

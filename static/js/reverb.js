@@ -9,7 +9,7 @@ http://music.cs.northwestern.edu/publications/Rafii-Pardo%20-%20A%20Digital%20Re
 Depends: filter.js, primefactors.js.
 */
 
-var fs = 48000;
+var fs = 480;
 var allpassgain = .1;
 var mindelay = .01;
 
