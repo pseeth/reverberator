@@ -42,7 +42,6 @@ function Reverb (context, opts) {
 	// Setting up internal audio nodes to implement the reverberator.
 	this.combNodes = []
 	rt = this.param.d*Math.log(.001)/Math.log(this.param.g);
-
 	for (var i = 0; i < 6; i++) {
 		var delay = this.param.d*(15-i)/15;
 		var gain = Math.pow(.001,delay/rt);
@@ -267,7 +266,7 @@ Reverb.prototype = Object.create(null, {
 			rt = this.param.d*Math.log(.001)/Math.log(this.param.g);
 			for (i = 0; i < 6; i++) {
 				var delay = this.param.d*(15-i)/15;
-				delay = prevPrime(delay*fs)/fs;
+				delay = nextPrime(delay*fs)/fs;
 				var gain = Math.pow(.001,delay/rt);
 				this.combNodes[i].g2 = gain;
 				this.combNodes[i].d = delay;

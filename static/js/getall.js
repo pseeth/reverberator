@@ -2,7 +2,7 @@ var data;
 var tasks;
 
 $(document).ready(function() {
-	$.getJSON('/static/js/userparameters.json', function(data) {loadData(data);})
+	$.getJSON('/static/js/userparameters_no_words.json', function(data) {loadData(data);})
 });
 
 function loadData(d) {
@@ -10,6 +10,7 @@ function loadData(d) {
 	tasks = Object.keys(data[0]);
 	index = tasks.indexOf('userid');
 	tasks.splice(index, 1);
+	tasks.pop(tasks.length);
 }
 
 global = {

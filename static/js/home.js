@@ -1,18 +1,45 @@
-var music = {playing:false, reverb:false};
-
 var context;
 var reverberator;
+var sampleRate = 44100;
 var buffers;
 var audio;
+var tasks = ['task1a', 'task2a', 'task3a', 'task1b', 'task2b', 'task3b'];
 var info;
 
 function setupContext() {
-	context = new AudioContext();
+	context = new OfflineAudioContext(2, sampleRate*10, sampleRate);
 	reverberator = new Reverb(context);
+	context.oncomplete = function (e) {
+		outBuffer = e.renderedBuffer;
+		var worker = new Worker('/static/js/recorderWorker.js');
+		worker.postMessage({
+			command: 'init',
+			config: {
+				sampleRate: context.sampleRate
+			}
+		});
+
+		worker.postMessage({
+			command: 'record',
+			buffer: [outBuffer.getChannelData(0),
+					outBuffer.getChannelData(1)]
+		});
+
+		worker.postMessage({
+			command: 'exportWAV',
+			type: 'audio/wav'
+		});
+
+		worker.onmessage = function(e) {
+			post(e);
+		}
+		audio.stop(0);
+	};
+
 }
 
 $(document).ready(function() {
-	audiofile = ["/static/audio/guitar.mp3"]
+	audiofile = ["/static/audio/wideimpulse.wav"]
 	setupContext();
 	bufferloader = new BufferLoader (
 		context,
@@ -23,12 +50,12 @@ $(document).ready(function() {
 
 	function finished(bufferlist) {
 		buffers = bufferlist.slice(0);
-		create_graph()
 	}
 });
 
-function set_reverb(params, infos) {
+function impulse(params, infos) {
 	info = infos;
+	console.log(params);
 	setupContext();
 	/*
 		Sets reverberator to given parameters:
@@ -47,36 +74,15 @@ function set_reverb(params, infos) {
 	reverberator.f = params.f;
 	reverberator.E = params.E;
 	reverberator.wetdry = params.wetdry;
+	render();
 }
 
-function create_graph() {
-	audio = createsource(buffers[0], false);
-	audio.connect(reverberator.input);
-	reverberator.connect(context.destination);
-}
-
-music.play = function(loop) {
-	create_graph();
-	if (!audio.start) {
-		audio.noteOn(0);
-	} else {
-		audio.start(0);
-	}
-	console.log('playing');
-}
-
-music.stop = function() {
-	if (!audio.stop) {
-		audio.noteOff(0);
-	} else {
-		audio.stop(0);
-	}
-	console.log('stopped');
-}
-
-music.toggle = function(loop) {
-	this.playing ? this.stop() : this.play(loop);
-	this.playing = !this.playing;
+function render() {
+	audio = createsource(buffers[0], false)
+	audio.connect(reverberator.input)
+	reverberator.connect(context.destination)
+	audio.start(0);
+	context.startRendering();
 }
 
 function createsource(buffer, loop) {
